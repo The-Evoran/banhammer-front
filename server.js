@@ -1,74 +1,43 @@
 // Load Node modules
 var express = require('express');
 const ejs   = require('ejs');
-const {Sequelize, DataTypes} = require('sequelize');
+const db = require("./config/database");
+const UserModel = require("./models/user");
+const banlistModel = require("./models/user");
+const port = 3000;
 
-// // Sequelize connexion
-// const sequelize = new Sequelize(
-//     'banhammer',
-//     'root',
-//     '',
-//     {
-//         host: '35.195.43.177',
-//         dialect: 'mysql',
-//         timestamps: false,
-//      pool: {
-//         max: 5,
-//         min: 0,
-//         idle: 10000
-//       },
-        
-
-//     }
-// );
 
 // // Essaye de te connecter putain
-// sequelize.authenticate().then(() => {
-//    console.log('Connection has been established successfully.');
-// }).catch((error) => {
-//    console.error('Unable to connect to the database: ', error);
-// });
+const initApp = async () => {
+    console.log("Testing the database connection..");
+    /**
+     * Test the connection.
+     * You can use the .authenticate() function to test if the connection works.
+     */
+    try {
+        await db.authenticate();
+        console.log("Connection has been established successfully.");
+        UserModel.sync({
+            alter:true,
+        });
+        banlistModel.sync({
+            alter:true,
+        });
+        /**
+         * Start the web server on the specified port.
+         */
+        app.listen(port, () => {
+            console.log(`Server is up and running at: http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error("Unable to connect to the database:", error.original);
+    }
+};
+initApp();
 
-// // créé les utilisateurs omg
-// const User = sequelize.define("users", {
-//     id:{
-//         type: DataTypes.INTEGER,
-//         autoIncrement: true,
-//         primaryKey: true
-//     },
-//     access_token: {
-//         type: DataTypes.STRING,
-//         allowNull: false
-//     },
-//     expires_in: {
-//         type: DataTypes.INTEGER,
-//         allowNull: false
-//     },
-//     refresh_token: {
-//         type: DataTypes.STRING,
-//         allowNull: false
-//     }
-// });
-// const banlist = sequelize.define("banlist", {
-//     id:{
-//         type: DataTypes.STRING,
-//         primaryKey: true
-//     },
-//     owner:{
-//         type: DataTypes.INTEGER,
-//         allowNull: false
-//     },
-//     banned:{
-//         type: DataTypes.STRING
-//     }
-// })
 
-// // Synchronisation de la BDD hihi
-// sequelize.sync().then(() => {
-//     console.log('Beep boop les utilisateurs sont correctement ajouté!');
-//  }).catch((error) => {
-//     console.error('Beep boop la creation de table rencontre une erreur : ', error);
-//  }); 
+
+
 
 // Initialise Express
 var app = express();
@@ -82,18 +51,30 @@ app.listen(8080);
 
 
 app.get('/', function(req, res) {
-    var name = "JAMBON";
     res.render('pages/index', {
-        name: name
     });
 });
-app.get('/panel', function(req,res) {
+app.get('/panel', function(req, res) {
     res.render('pages/pannel')
 });
 
-app.get('/oauth', function(req,res) {
-    var body = req.body;
+app.get('/oauth', function(req, res, next) {
+    UserModel.create({
+        access_token: req.query.code,
 
+    })
+    .then((result) => {
+        return res.json({
+          	message: "User added created successfully!",
+        });
+    })
+    .catch((error) => {
+        console.log(error);
+        return res.json({
+          	message: "Unable to add user!",
+        });
+    });
+    res.send('code is ' + req.query.code + ' scope is ' + req.query.scope + ' state is ' + req.query.state);
 });
 
 // Book.create({
@@ -106,3 +87,4 @@ app.get('/oauth', function(req,res) {
 // }).catch((error) => {
 //     console.error('Failed to create a new record : ', error);
 // });
+
