@@ -2,4 +2,4 @@ runtime: nodejs12
 env: standard
 
 beta_settings:
-  cloud_sql_instances: {banhammher:europe-west1:banhammer}
+  cloud_sql_instances: banhammher:europe-west1:banhammer
